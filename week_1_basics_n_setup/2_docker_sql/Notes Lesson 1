@@ -1,0 +1,116 @@
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+
+
+#Run this in terminal to start postgres. This will create a database called ny_taxi in the folder ny_taxi_postgres_data (create an empty folder ny_taxi_postgres_data in the working directory).
+
+docker run -it \
+    -e POSTGRES_USER="root" \
+    -e POSTGRES_PASSWORD="root" \
+    -e POSTGRES_DB="ny_taxi" \
+    -v $(pwd)/ny_taxi_postgres_data:/var/lib/postgresql/data \
+    -p 5432:5432 \
+postgres:13
+
+#After docker run, you can connect to the database using the following command:
+#pgcli -h localhost -p 5432 -u root -d ny_taxi
+
+
+## Connecting network to postgres and pgadmin
+
+docker network create pg-network
+
+docker run -it \
+    -e POSTGRES_USER="root" \
+    -e POSTGRES_PASSWORD="root" \
+    -e POSTGRES_DB="ny_taxi" \
+    -v $(pwd)/ny_taxi:/var/lib/postgresql/data \
+    -p 5432:5432 \
+    --network=pg-network \
+    --name pg-database \
+    postgres:13
+
+The --name pg-database flag assigns the name pg-database to the container. This name can then be used as a hostname to connect to the container from other containers within the same Docker network.
+When you created the pg-network using docker network create pg-network, it allowed containers connected to that network to communicate with each other using their container names as hostnames.
+In this case, you used pg-database as the hostname in the taxi_ingest container to connect to the PostgreSQL container.
+Using container names as hostnames simplifies container-to-container communication and makes it easier to manage connections between containers within the same Docker network.
+
+
+docker run -it \
+    -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+    -e PGADMIN_DEFAULT_PASSWORD="root" \
+    -p 8080:80 \
+    --network pg-network \
+    --name pg-admin \
+    dpage/pgadmin4
+
+
+
+
+
+#1.2.4 --Dockerizing the ingestion script
+## psycopg2 is a python library that allows you to connect to postgres from python
+
+docker build -t taxi_ingest: v001 .
+
+## For the database that was created under the network
+
+docker run --rm -it \
+  --network pg-network \
+  taxi_ingest:v001 \
+  --user root \
+  --password root \
+  --host pg-database \
+  --port 5432 \
+  --database ny_taxi \
+  --table_name yellow_taxi_trips \
+  --url "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet"
+
+## For the postgres database that isn't under the network
+docker run --rm -it \
+  taxi_ingest:v001 \
+  --user root \
+  --password root \
+  --host host.docker.internal \
+  --port 5432 \
+  --database ny_taxi \
+  --table_name yellow_taxi_trips \
+  --url "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet"
+
+Using the container name as the hostname without creating a custom network will not work because the containers are not on the same network by default.
+When you create a custom Docker network (like pg-network), Docker's embedded DNS server resolves container names to their respective IP addresses within that network.
+Since you didn't create the custom network in this case, you'll need to use the host's IP address or host.docker.internal
+(if available on your platform) as the hostname. Make sure the PostgreSQL container's port 5432 is exposed to the host machine.
+
+1.  --rm: This flag is short for "remove". When you use --rm with docker run, Docker automatically removes the container when it exits.
+          This helps to clean up any stopped containers and frees up system resources, such as disk space and memory, that were used by the container.
+
+2.  -it: This flag is a combination of two individual flags -i and -t:
+
+        a).     -i: The -i flag stands for "interactive". It keeps the standard input (stdin) open, allowing you to interact with the container via the command line.
+                    This is useful when you want to send input to a running container or when you want to keep a container running in the foreground.
+
+        b).     -t: The -t flag stands for "tty" (teletypewriter). It allocates a pseudo-tty (terminal) to the container, which provides a terminal-like interface to interact with the container.
+                    This is useful when you want to have a terminal-like experience with the container, such as running a shell or a command-line application.
+
+Together, --rm -it is a common combination of flags used with docker run to start a container that you can interact with through the terminal and that will be automatically removed once it exits.
+
+## 1.2.5 --Running Postgres and pgAdmin with Docker-Compose
+
+docker-compose up -d
+This command will yield the terminal back to you and run the containers in the background. The -d flag stands for "detached" mode.
+
+docker-compose down
+Proper way to stop the containers
