@@ -33,6 +33,8 @@ def transform_data(df):
     df = df[df.passenger_count > 0]
     print(f'post: missing passenger count: {df.passenger_count.isin([0]).sum()}')
 
+    return df
+
 @task(log_prints=True, retries=3)
 def ingest_data(user, password, host, port, db, table_name, df):
     
@@ -43,8 +45,8 @@ def ingest_data(user, password, host, port, db, table_name, df):
 
 @flow(name="Ingest Data")
 def main_flow():
-    user = "postgres"
-    password = "admin"
+    user = "root"
+    password = "root"
     host = "localhost"
     port = "5432"
     db = "ny_taxi"
