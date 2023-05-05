@@ -37,7 +37,7 @@ def transform_data(df):
 
 @task(log_prints=True, retries=3)
 def ingest_data(user, password, host, port, db, table_name, df):
-    
+
     postgres_url = f"postgresql://{user}:{password}@{host}:{port}/{db}"
     engine = create_engine(postgres_url)
     df.head(n=0).to_sql(name=table_name, con=engine, if_exists='replace')
