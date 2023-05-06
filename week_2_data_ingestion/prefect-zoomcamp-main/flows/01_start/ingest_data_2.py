@@ -37,26 +37,27 @@ def transform_data(df):
     return df
 
 @task(log_prints=True, retries=3)
-def ingest_data(user, password, host, port, db, table_name, df):
+def ingest_data(table_name, df):
 
     connection_block = SqlAlchemyConnector.load("zoomcamp-nytaxi")
-    postgres_url = f"postgresql://{user}:{password}@{host}:{port}/{db}"
-    engine = create_engine(postgres_url)
-    df.head(n=0).to_sql(name=table_name, con=engine, if_exists='replace')
-    df.to_sql(name=table_name, con=engine, if_exists='append')
+
+    with connection_block.get_connection(begin=False) as engine:
+        df.head(n=0).to_sql(name=table_name, con=engine, if_exists='replace')
+        df.to_sql(name=table_name, con=engine, if_exists='append')
+
+
+@flow(name="Subflow", log_prints=True)
+def log_subflow(table_name:str):
+    print(f"Logging subflow for {table_name}")
 
 @flow(name="Ingest Data")
-def main_flow():
-    user = "root"
-    password = "root"
-    host = "localhost"
-    port = "5432"
-    db = "ny_taxi"
-    table_name = "yellow_taxi_trips_prefect"
+def main_flow(table_name: str):
+
     csv_url = "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz"
+    log_subflow(table_name)
     raw_data = extract_data(csv_url)
     data = transform_data(raw_data)
-    ingest_data(user, password, host, port, db, table_name, data)
+    ingest_data(table_name, data)
 
 if __name__ == '__main__':
-    main_flow()
+    main_flow("yellow_taxi_trips")
