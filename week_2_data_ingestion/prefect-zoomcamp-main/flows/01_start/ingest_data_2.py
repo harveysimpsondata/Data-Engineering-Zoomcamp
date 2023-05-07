@@ -48,9 +48,9 @@ def ingest_data(table_name, df):
 
 @flow(name="Subflow", log_prints=True)
 def log_subflow(table_name:str):
-    print(f"Logging subflow for {table_name}")
+    print(f"Logging subflow for: {table_name}")
 
-@flow(name="Ingest Data")
+@flow(name="Ingest Flow")
 def main_flow(table_name: str):
 
     csv_url = "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz"
