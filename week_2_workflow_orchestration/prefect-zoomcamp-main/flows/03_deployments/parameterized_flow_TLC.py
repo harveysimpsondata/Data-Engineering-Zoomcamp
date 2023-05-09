@@ -25,7 +25,7 @@ def write_local(df: pd.DataFrame, color: str, dataset_file: str) -> Path:
 @task()
 def write_gcs(path: Path) -> None:
     """Upload local parquet file to GCS"""
-    gcs_block = GcsBucket.load("zoomcamp-bucket")
+    gcs_block = GcsBucket.load("ny-taxi1")
     gcs_block.upload_from_path(from_path=path, to_path=path)
     return
 
@@ -42,7 +42,7 @@ def etl_web_to_gcs(year: int, month: int, color: str) -> None:
 
 
 @flow()
-def etl_parent_flow(
+def etl_parent_flow_TLC(
     months: list[int] = [1, 2], years: list[int] = [2021, 2022], colors: list[str] = ["yellow", "green"]
 ):
     for year in years:
@@ -56,4 +56,4 @@ if __name__ == "__main__":
     colors = ["yellow", "green"]
     months = [1, 2]
     years = [2021, 2022]
-    etl_parent_flow(months, years, colors)
+    etl_parent_flow_TLC(months, years, colors)
