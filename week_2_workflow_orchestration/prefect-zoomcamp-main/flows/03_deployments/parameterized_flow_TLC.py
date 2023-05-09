@@ -10,7 +10,7 @@ from datetime import timedelta
 def fetch(dataset_url: str) -> pd.DataFrame:
     """Read taxi data from web into pandas DataFrame"""
 
-    df = pd.read_csv(dataset_url)
+    df = pd.read_parquet(dataset_url)
     return df
 
 
