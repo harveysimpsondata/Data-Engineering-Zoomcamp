@@ -3,15 +3,45 @@
 ###
 name: Parameterized ETL TLC
 description: null
-version: 2f1568636091fea1b8bba0c0d4cffe16
+version: eee432d627eef249a3b915632b9965d6
 # The work queue that will handle this deployment's runs
 work_queue_name: default
-work_pool_name: null
+work_pool_name: default-agent-pool
 tags: []
-parameters: {}
+parameters:
+  years:
+  - 2016
+  - 2017
+  - 2018
+  - 2019
+  - 2020
+  - 2021
+  - 2022
+  colors:
+  - yellow
+  - green
+  months:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
 schedule: null
-is_schedule_active: null
+is_schedule_active: true
 infra_overrides: {}
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: etl-parent-flow-TLC
+manifest_path: null
 infrastructure:
   type: process
   env: {}
@@ -20,14 +50,11 @@ infrastructure:
   command: null
   stream_output: true
   working_dir: null
+  _block_document_id: f77a6298-9a94-4768-a161-365156d6d56b
+  _block_document_name: anonymous-a959bca9-1958-4842-8aa7-df6126c3e228
+  _is_anonymous: true
   block_type_slug: process
   _block_type_slug: process
-
-###
-### DO NOT EDIT BELOW THIS LINE
-###
-flow_name: etl-parent-flow-TLC
-manifest_path: null
 storage: null
 path: /Users/leesimpson/PycharmProjects/Data-Engineering-Zoomcamp/week_2_workflow_orchestration/prefect-zoomcamp-main/flows/03_deployments
 entrypoint: parameterized_flow_TLC.py:etl_parent_flow_TLC
@@ -64,4 +91,4 @@ parameter_openapi_schema:
         type: string
   required: null
   definitions: null
-timestamp: '2023-05-09T00:39:30.958927+00:00'
+timestamp: '2023-05-09T01:38:11.212830+00:00'
